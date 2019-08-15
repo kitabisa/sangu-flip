@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	BankListURL = "/banks"
+	BankListURL = "/general/banks"
 )
 
 type CoreGateway struct {
