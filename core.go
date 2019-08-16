@@ -8,6 +8,7 @@ import (
 
 const (
 	BankListURL = "/general/banks"
+	BankAccountInquiryURL= "/disbursement/bank-account-inquiry"
 )
 
 type CoreGateway struct {
@@ -35,6 +36,28 @@ func (gateway *CoreGateway) GetBanks(bankCode string) (resp []Banks, err error) 
 	}
 
 	err = gateway.Call("GET", BankListURL, headers, strings.NewReader(data.Encode()), &resp)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (gateway *CoreGateway) BankAccountInquiry(bankCode string, accountNumber string) (resp []BankAccountInquiry, err error) {
+	data := url.Values{}
+	if bankCode != "" {
+		data.Set("code", bankCode)
+	}
+
+	if accountNumber != "" {
+		data.Set("account_number", accountNumber)
+	}
+
+	headers := map[string]string{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	err = gateway.Call("POST", BankAccountInquiryURL, headers, strings.NewReader(data.Encode()), &resp)
 	if err != nil {
 		return
 	}
