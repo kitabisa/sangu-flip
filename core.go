@@ -43,10 +43,10 @@ func (gateway *CoreGateway) GetBanks(bankCode string) (resp []Banks, err error) 
 	return
 }
 
-func (gateway *CoreGateway) BankAccountInquiry(bankCode string, accountNumber string) (resp []BankAccountInquiry, err error) {
+func (gateway *CoreGateway) GetBankAccountInquiry(bankCode string, accountNumber string) (resp BankAccountInquiry, err error) {
 	data := url.Values{}
 	if bankCode != "" {
-		data.Set("code", bankCode)
+		data.Set("bank_code", bankCode)
 	}
 
 	if accountNumber != "" {
