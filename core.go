@@ -2,6 +2,7 @@ package flip
 
 import (
 	"io"
+	"fmt"
 	"net/url"
 	"strings"
 )
@@ -35,7 +36,7 @@ func (gateway *CoreGateway) GetBanks(bankCode string) (resp []Banks, err error) 
 		"Content-Type": "application/x-www-form-urlencoded",
 	}
 
-	err = gateway.Call("GET", BankListURL, headers, strings.NewReader(data.Encode()), &resp)
+	err = gateway.Call("GET", fmt.Sprintf("%s?%s", BankListURL, data.Encode()), headers, nil, &resp)
 	if err != nil {
 		return
 	}
