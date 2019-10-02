@@ -1,15 +1,15 @@
 package flip
 
 import (
-	"io"
 	"fmt"
+	"io"
 	"net/url"
 	"strings"
 )
 
 const (
-	BankListURL = "/general/banks"
-	BankAccountInquiryURL= "/disbursement/bank-account-inquiry"
+	BankListURL           = "/general/banks"
+	BankAccountInquiryURL = "/disbursement/bank-account-inquiry"
 )
 
 type CoreGateway struct {
@@ -37,10 +37,6 @@ func (gateway *CoreGateway) GetBanks(bankCode string) (resp []Banks, err error) 
 	}
 
 	err = gateway.Call("GET", fmt.Sprintf("%s?%s", BankListURL, data.Encode()), headers, nil, &resp)
-	if err != nil {
-		return
-	}
-
 	return
 }
 
@@ -59,9 +55,5 @@ func (gateway *CoreGateway) GetBankAccountInquiry(bankCode string, accountNumber
 	}
 
 	err = gateway.Call("POST", BankAccountInquiryURL, headers, strings.NewReader(data.Encode()), &resp)
-	if err != nil {
-		return
-	}
-
 	return
 }
