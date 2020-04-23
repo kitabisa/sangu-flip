@@ -70,7 +70,7 @@ func (c *Client) ExecuteRequest(req *http.Request, v interface{}) error {
 	res, err := httpClient.Do(req)
 	if err != nil {
 		if logLevel > 0 {
-			logger.Println("Cannot send request: ", err)
+			logger.Println("Request failed: ", err)
 		}
 		return err
 	}
@@ -78,13 +78,6 @@ func (c *Client) ExecuteRequest(req *http.Request, v interface{}) error {
 
 	if logLevel > 2 {
 		logger.Println("Completed in ", time.Since(start))
-	}
-
-	if err != nil {
-		if logLevel > 0 {
-			logger.Println("Request failed: ", err)
-		}
-		return err
 	}
 
 	resBody, err := ioutil.ReadAll(res.Body)
