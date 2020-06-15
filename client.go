@@ -31,18 +31,16 @@ type HTTPOption struct {
 	RetryCount        int
 }
 
-func NewClient(baseUrl string, userKey string) Client {
+func NewClient() Client {
 	// default HTTP Option
 	httpOption := HTTPOption{
 		Timeout:           10 * time.Second,
 		BackoffInterval:   2 * time.Millisecond,
 		MaxJitterInterval: 5 * time.Millisecond,
-		RetryCount:        3,
+		RetryCount:        0,
 	}
 
 	return Client{
-		BaseURL: baseUrl,
-		UserKey: userKey,
 		// LogLevel is the logging level used by the LinkAja library
 		// 0: No logging
 		// 1: Errors only
