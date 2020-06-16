@@ -11,14 +11,14 @@ import (
 )
 
 const (
-	BankListURL             = "/api/v2/general/banks"
-	BankAccountInquiryURL   = "/api/v2/disbursement/bank-account-inquiry"
-	CurrentBalanceURL       = "/api/v2/general/balance"
-	CheckIsOperationalURL   = "/api/v2/general/operational"
-	CheckIsMaintenanceURL   = "/api/v2/general/maintenance"
-	GetAllDisbursementURL   = "/api/v2/disbursement"
-	GetDisbursementQueueURL = "/api/v2/disbursement/[trxId]/queue"
-	DisburseURL             = "/api/v2/disbursement"
+	BankListURL             = "/general/banks"
+	BankAccountInquiryURL   = "/disbursement/bank-account-inquiry"
+	CurrentBalanceURL       = "/general/balance"
+	CheckIsOperationalURL   = "/general/operational"
+	CheckIsMaintenanceURL   = "/general/maintenance"
+	GetAllDisbursementURL   = "/disbursement"
+	GetDisbursementQueueURL = "/disbursement/[trxId]/queue"
+	DisburseURL             = "/disbursement"
 )
 
 type CoreGateway struct {
