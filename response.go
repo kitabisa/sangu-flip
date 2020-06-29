@@ -84,9 +84,15 @@ type GetAllDisbursement struct {
 }
 
 type ErrorResponse struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Error   interface{} `json:"error,omitempty"`
+}
+
+type GeneralErrorResponse struct {
 	Name    string `json:"name"`
 	Message string `json:"message"`
-	Code    uint16 `json:"code"`
-	Status  uint16 `json:"status"`
+	Code    int    `json:"code"`
+	Status  int    `json:"status"`
 	Type    string `json:"type"`
 }

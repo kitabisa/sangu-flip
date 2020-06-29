@@ -89,7 +89,7 @@ func (c *Client) NewRequest(method string, fullPath string, headers map[string]s
 }
 
 // ExecuteRequest : execute request
-func (c *Client) ExecuteRequest(req *http.Request, v interface{}, x interface{}) error {
+func (c *Client) ExecuteRequest(req *http.Request, v interface{}) (err error, respErr ErrorResponse) {
 	logLevel := c.LogLevel
 	logger := c.Logger
 
@@ -103,7 +103,7 @@ func (c *Client) ExecuteRequest(req *http.Request, v interface{}, x interface{})
 		if logLevel > 0 {
 			logger.Println("Request failed: ", err)
 		}
-		return err
+		return
 	}
 	defer res.Body.Close()
 
@@ -116,7 +116,7 @@ func (c *Client) ExecuteRequest(req *http.Request, v interface{}, x interface{})
 		if logLevel > 0 {
 			logger.Println("Cannot read response body: ", err)
 		}
-		return err
+		return
 	}
 
 	if logLevel > 2 {
@@ -124,31 +124,52 @@ func (c *Client) ExecuteRequest(req *http.Request, v interface{}, x interface{})
 		logger.Println("Flip body response: ", string(resBody))
 	}
 
-	if v != nil && res.StatusCode == 200 {
+	if v != nil && res.StatusCode == http.StatusOK {
 		if err = json.Unmarshal(resBody, v); err != nil {
-			return err
+			respErr.Code = res.StatusCode
+			respErr.Message = err.Error()
+			return
 		}
 	}
 
-	if x != nil && res.StatusCode != 200 {
-		if err = json.Unmarshal(resBody, x); err != nil {
-			return err
+	if res.StatusCode != http.StatusOK {
+		// Disbursement validation error
+		if res.StatusCode == http.StatusUnprocessableEntity {
+			var disbursementError DisbursementError
+			if err = json.Unmarshal(resBody, &disbursementError); err != nil {
+				respErr.Message = err.Error()
+				return
+			}
+			respErr.Code = res.StatusCode
+			respErr.Message = disbursementError.Code
+			respErr.Error = &disbursementError
+			return
 		}
+
+		// General Error like auth error and data not found
+		var generalErrorResponse GeneralErrorResponse
+		if err = json.Unmarshal(resBody, &generalErrorResponse); err != nil {
+			respErr.Message = err.Error()
+			return
+		}
+		respErr.Code = res.StatusCode
+		respErr.Message = generalErrorResponse.Message
+		respErr.Error = &generalErrorResponse
 	}
 
-	return nil
+	return
 }
 
-// Call the LinkAja API at specific `path` using the specified HTTP `method`. The result will be
-// given to `v` if there is no error. If any error occurred, the return of this function is the error
-// itself, otherwise nil.
-func (c *Client) Call(method, path string, header map[string]string, body io.Reader, v interface{}, x interface{}) error {
+// Call the BigFlip API at specific `path` using the specified HTTP `method`. The result will be
+// given to `v` if there is no error. If any error occurred and Bigflip send error response, the result will be error code, error message and data, otherwise only error code and error message
+func (c *Client) Call(method, path string, header map[string]string, body io.Reader, v interface{}) (err error, respErr ErrorResponse) {
 	req, err := c.NewRequest(method, path, header, body)
 	if err != nil {
-		return err
+		return
 	}
 
-	return c.ExecuteRequest(req, v, x)
+	err, respErr = c.ExecuteRequest(req, v)
+	return
 }
 
 // ===================== END HTTP CLIENT ================================================
