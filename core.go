@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -50,6 +51,12 @@ func (gateway *CoreGateway) GetBanks(bankCode string) (resp []Bank, respError Er
 	}
 
 	err, respError = gateway.Call("GET", fmt.Sprintf("%s?%s", BankListURL, data.Encode()), headers, nil, &resp)
+	if err == nil && respError.Message == "" {
+		sort.Slice(resp, func(i, j int) bool {
+			return resp[i].Name < resp[j].Name
+		})
+	}
+
 	return
 }
 
