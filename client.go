@@ -124,10 +124,19 @@ func (c *Client) ExecuteRequest(req *http.Request, v interface{}) (err error, re
 		logger.Println("Flip body response: ", string(resBody))
 	}
 
+	// General Error like auth error and data not found
+	var generalErrorResponse GeneralErrorResponse
+
 	if v != nil && res.StatusCode == http.StatusOK {
 		if err = json.Unmarshal(resBody, v); err != nil {
 			respErr.Code = res.StatusCode
-			respErr.Message = err.Error()
+
+			if err = json.Unmarshal(resBody, &generalErrorResponse); err != nil {
+				respErr.Message = err.Error()
+				return
+			}
+
+			respErr.Message = generalErrorResponse.Message
 			return
 		}
 	}
@@ -146,8 +155,6 @@ func (c *Client) ExecuteRequest(req *http.Request, v interface{}) (err error, re
 			return
 		}
 
-		// General Error like auth error and data not found
-		var generalErrorResponse GeneralErrorResponse
 		if err = json.Unmarshal(resBody, &generalErrorResponse); err != nil {
 			respErr.Message = err.Error()
 			return
