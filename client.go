@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"io"
 	"io/ioutil"
-	"log"
+	"moul.io/http2curl"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/gojek/heimdall"
@@ -19,7 +18,7 @@ type Client struct {
 	BaseURL    string
 	UserKey    string
 	LogLevel   int
-	Logger     *log.Logger
+	Logger     Logger
 	HTTPOption HTTPOption
 }
 
@@ -32,6 +31,14 @@ type HTTPOption struct {
 }
 
 func NewClient() Client {
+
+	logOption := LogOption{
+		Format:          "text",
+		Level:           "info",
+		TimestampFormat: "2006-01-02T15:04:05-0700",
+		CallerToggle:    false,
+	}
+
 	// default HTTP Option
 	httpOption := HTTPOption{
 		Timeout:           10 * time.Second,
@@ -40,6 +47,8 @@ func NewClient() Client {
 		RetryCount:        0,
 	}
 
+	logger := *NewLogger(logOption)
+
 	return Client{
 		// LogLevel is the logging level used by the LinkAja library
 		// 0: No logging
@@ -47,7 +56,7 @@ func NewClient() Client {
 		// 2: Errors + informational (default)
 		// 3: Errors + informational + debug
 		LogLevel:   2,
-		Logger:     log.New(os.Stderr, "", log.LstdFlags),
+		Logger:     logger,
 		HTTPOption: httpOption,
 	}
 }
@@ -66,14 +75,9 @@ func getHTTPClient(opt HTTPOption) *httpclient.Client {
 
 // NewRequest : send new request
 func (c *Client) NewRequest(method string, fullPath string, headers map[string]string, body io.Reader) (*http.Request, error) {
-	logLevel := c.LogLevel
-	logger := c.Logger
-
 	req, err := http.NewRequest(method, fullPath, body)
 	if err != nil {
-		if logLevel > 0 {
-			logger.Println("Request creation failed: ", err)
-		}
+		c.Logger.Error("Request creation failed: %v", err)
 		return nil, err
 	}
 
@@ -90,39 +94,28 @@ func (c *Client) NewRequest(method string, fullPath string, headers map[string]s
 
 // ExecuteRequest : execute request
 func (c *Client) ExecuteRequest(req *http.Request, v interface{}) (err error, respErr ErrorResponse) {
-	logLevel := c.LogLevel
-	logger := c.Logger
-
-	if logLevel > 1 {
-		logger.Println("Request ", req.Method, ": ", req.URL.Host, req.URL.Path)
-	}
-
+	command, _ := http2curl.GetCurlCommand(req)
 	start := time.Now()
+	c.Logger.Info("Start requesting: %v ", req.URL)
+
 	res, err := getHTTPClient(c.HTTPOption).Do(req)
 	if err != nil {
-		if logLevel > 0 {
-			logger.Println("Request failed: ", err)
-		}
+		c.Logger.Error("Request failed. Error : %v , Curl Request : %v", err, command)
 		return
 	}
 	defer res.Body.Close()
 
-	if logLevel > 2 {
-		logger.Println("Completed in ", time.Since(start))
-	}
+	c.Logger.Info("Completed in %v", time.Since(start))
+	c.Logger.Info("Curl Request: %v ", command)
 
 	resBody, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		if logLevel > 0 {
-			logger.Println("Cannot read response body: ", err)
-		}
+		c.Logger.Error("Cannot read response body: %v ", err)
 		return
 	}
 
-	if logLevel > 2 {
-		logger.Println("Flip HTTP status response: ", res.StatusCode)
-		logger.Println("Flip body response: ", string(resBody))
-	}
+	c.Logger.Info("Flip HTTP status response : %d", res.StatusCode)
+	c.Logger.Info("Flip response body : %s", string(resBody))
 
 	// General Error like auth error and data not found
 	var generalErrorResponse GeneralErrorResponse
